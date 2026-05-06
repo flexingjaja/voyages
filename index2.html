@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voyages.io - Comparateur Premium</title>
+    
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <style>
+        :root {
+            --bg-body: #f4f7f6; 
+            --bg-sidebar: #ffffff; 
+            --bg-card: #ffffff; 
+            --border-color: #e5e7eb; 
+            --accent: #4f46e5; 
+            --accent-hover: #4338ca;
+            --accent-light: #e0e7ff;
+            --yt-red: #ff0000;
+            --danger: #ef4444; 
+            --text-main: #111827; 
+            --text-muted: #6b7280;
+            --input-bg: #f9fafb; 
+            --btn-bg: #f3f4f6; 
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius-md: 12px;
+            --radius-lg: 20px;
+        }
+        body.dark-mode {
+            --bg-body: #0f172a; 
+            --bg-sidebar: #1e293b; 
+            --bg-card: #1e293b; 
+            --border-color: #334155; 
+            --accent: #6366f1; 
+            --accent-hover: #818cf8;
+            --accent-light: #312e81;
+            --text-main: #f8fafc; 
+            --text-muted: #94a3b8; 
+            --input-bg: #0f172a; 
+            --btn-bg: #334155;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-main); display: flex; height: 100vh; overflow: hidden; transition: background-color 0.3s, color 0.3s; }
+
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 10px; }
+
+        .sidebar { width: 400px; min-width: 400px; flex-shrink: 0; height: 100vh; background: var(--bg-sidebar); border-right: 1px solid var(--border-color); display: flex; flex-direction: column; overflow-y: auto; z-index: 10; transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: var(--shadow-md); }
+        .sidebar.collapsed { transform: translateX(-100%); margin-right: -400px; }
+        
+        .header { padding: 24px; border-bottom: 1px solid var(--border-color); position: sticky; top: 0; background: var(--bg-sidebar); z-index: 20;}
+        .brand-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        
+        .logo-container { display: flex; align-items: center; gap: 10px; }
+        .favicon-img { width: 28px; height: 28px; border-radius: 6px; object-fit: cover; }
+        .logo { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.5px; } .logo span { color: var(--accent); }
+        
+        .action-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn-action { flex: 1; padding: 10px; font-size: 0.8rem; font-weight: 600; border-radius: var(--radius-md); border: 1px solid var(--border-color); cursor: pointer; background: var(--btn-bg); color: var(--text-main); transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px; }
+        .btn-action:hover { background: var(--border-color); }
+        .btn-danger { color: var(--danger); background: rgba(239, 68, 68, 0.05); border-color: rgba(239, 68, 68, 0.2); }
+        .btn-danger:hover { background: rgba(239, 68, 68, 0.1); }
+
+        .form-section { padding: 24px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .full-width { grid-column: 1 / -1; }
+        .section-title { grid-column: 1 / -1; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-top: 10px; display: flex; align-items: center; gap: 8px; }
+        .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border-color); }
+        
+        .input-group { display: flex; flex-direction: column; position: relative; }
+        label { font-size: 0.8rem; font-weight: 600; color: var(--text-main); margin-bottom: 6px; }
+        input, textarea, select { background: var(--input-bg); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 10px 12px; color: var(--text-main); font-size: 0.9rem; outline: none; transition: all 0.2s; box-shadow: inset 0 1px 2px rgba(0,0,0,0.02); }
+        input:focus, textarea:focus, select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-light); }
+        .time-row { display: flex; gap: 8px; } .time-row input { flex: 1; }
+
+        .btn-submit { width: 100%; background: var(--accent); color: white; border: none; border-radius: var(--radius-md); padding: 14px; font-size: 1rem; font-weight: 700; cursor: pointer; transition: all 0.2s; margin-top: 24px; box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); }
+        .btn-submit:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4); }
+
+        .autocomplete-list { position: absolute; top: 100%; left: 0; right: 0; background: var(--bg-card); border: 1px solid var(--border-color); border-radius: var(--radius-md); max-height: 200px; overflow-y: auto; z-index: 100; display: none; box-shadow: var(--shadow-lg); margin-top: 5px; }
+        .autocomplete-item { padding: 12px; font-size: 0.85rem; cursor: pointer; border-bottom: 1px solid var(--border-color); transition: 0.2s; }
+        .autocomplete-item:hover, .autocomplete-item.active { background: var(--accent-light); color: var(--accent); font-weight: 600; }
+
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; width: 100%; display: flex; flex-direction: column; background: var(--bg-body); transition: padding 0.4s; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; gap: 15px; flex-wrap: wrap; background: var(--bg-card); padding: 16px 24px; border-radius: var(--radius-lg); box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); }
+        .page-title { font-size: 1.8rem; font-weight: 800; color: var(--text-main); }
+        
+        .top-actions { display: flex; gap: 12px; align-items: center; }
+        .btn-toggle-sidebar { background: var(--text-main); color: var(--bg-body); border: none; padding: 10px 20px; border-radius: var(--radius-md); font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px; }
+        .btn-toggle-sidebar:hover { opacity: 0.9; transform: scale(1.02); }
+
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 24px; align-items: start; padding-bottom: 40px; }
+
+        .trip-card { background: var(--bg-card); border-radius: var(--radius-lg); cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); position: relative; box-shadow: var(--shadow-sm); border: 1px solid var(--border-color); overflow: hidden; display: flex; flex-direction: column; }
+        .trip-card:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); border-color: var(--accent-light); }
+        .trip-card.compare-selected { border: 2px solid var(--accent); transform: translateY(-4px); box-shadow: 0 0 0 4px var(--accent-light); }
+        
+        .card-header { position: relative; height: 160px; }
+        .card-img { width: 100%; height: 100%; object-fit: cover; }
+        .card-gradient { position: absolute; inset: 0; background: linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%); }
+        
+        .badge-best { position: absolute; top: 12px; left: 12px; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; font-size: 0.75rem; padding: 6px 12px; border-radius: 20px; font-weight: 700; z-index: 2; box-shadow: 0 2px 4px rgba(0,0,0,0.2); display: flex; align-items: center; gap: 4px;}
+        .drag-handle { position: absolute; top: 12px; right: 12px; background: rgba(255,255,255,0.2); backdrop-filter: blur(4px); color: white; border-radius: 8px; padding: 6px; cursor: grab; z-index: 2; transition: 0.2s; }
+        .drag-handle:hover { background: rgba(255,255,255,0.4); }
+
+        .yt-badge-card { position: absolute; bottom: 12px; right: 12px; background: var(--yt-red); color: white; padding: 4px 8px; border-radius: 8px; font-size: 0.75rem; font-weight: 700; text-decoration: none; z-index: 3; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.3); transition: 0.2s; }
+        .yt-badge-card:hover { transform: scale(1.05); filter: brightness(1.1); color: white; }
+
+        .card-title-overlay { position: absolute; bottom: 16px; left: 16px; right: 80px; color: white; z-index: 2; }
+        .card-route { font-weight: 800; font-size: 1.4rem; line-height: 1.2; text-shadow: 0 2px 4px rgba(0,0,0,0.5); }
+        .card-dates { font-size: 0.85rem; font-weight: 500; opacity: 0.9; margin-top: 4px; }
+
+        .card-body { padding: 20px; }
+        .card-price-row { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px; padding-bottom: 16px; border-bottom: 1px dashed var(--border-color); }
+        .price-total { font-size: 1.8rem; font-weight: 800; color: var(--accent); line-height: 1; }
+        .price-pp { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); background: var(--btn-bg); padding: 4px 10px; border-radius: 12px; }
+
+        .card-details { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; font-size: 0.85rem; color: var(--text-main); font-weight: 500; }
+        .detail-item { display: flex; align-items: center; gap: 8px; }
+        .detail-icon { background: var(--accent-light); color: var(--accent); width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; }
+        
+        .card-note { margin-top: 16px; font-size: 0.85rem; color: var(--text-muted); background: var(--bg-body); padding: 10px 12px; border-radius: 8px; border-left: 3px solid var(--border-color); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(8px); z-index: 9999; display: flex; justify-content: center; align-items: center; opacity: 0; pointer-events: none; transition: 0.3s ease; padding: 20px; }
+        .modal-overlay.active { opacity: 1; pointer-events: auto; }
+        
+        .export-wrapper { background: var(--bg-sidebar); border-radius: 24px; overflow: hidden; width: 100%; max-width: 900px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); border: 1px solid var(--border-color); transform: translateY(20px) scale(0.98); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); display: flex; flex-direction: column; max-height: 90vh; }
+        .modal-overlay.active .export-wrapper { transform: translateY(0) scale(1); }
+        .modal-content { display: flex; flex-direction: column; overflow-y: auto; height: 100%; background: var(--bg-sidebar); position: relative; }
+        
+        .close-btn { position: absolute; top: 20px; right: 20px; background: var(--bg-body); border: none; border-radius: 50%; width: 36px; height: 36px; font-size: 1.2rem; cursor: pointer; color: var(--text-main); display: flex; justify-content: center; align-items: center; transition: 0.2s; z-index: 10; }
+        .close-btn:hover { background: var(--danger); color: white; transform: rotate(90deg); }
+
+        .modal-scroll { overflow-y: auto; padding: 30px; flex: 1; }
+        
+        .modal-header { text-align: center; margin-bottom: 30px; display: flex; flex-direction: column; align-items: center; }
+        .modal-route { font-size: 2rem; font-weight: 800; color: var(--text-main); display: flex; align-items: center; justify-content: center; gap: 15px; }
+        .modal-dates { display: inline-block; background: var(--accent-light); color: var(--accent); padding: 6px 16px; border-radius: 20px; font-weight: 600; font-size: 0.9rem; margin-top: 10px; }
+        .yt-btn-modal { display: inline-flex; align-items: center; gap: 6px; background: var(--yt-red); color: white; padding: 8px 16px; border-radius: 20px; text-decoration: none; font-weight: 700; margin-top: 12px; font-size: 0.9rem; box-shadow: 0 4px 6px rgba(255,0,0,0.2); transition: 0.2s;}
+        .yt-btn-modal:hover { transform: translateY(-2px); box-shadow: 0 6px 8px rgba(255,0,0,0.3); }
+
+        .flight-itinerary { background: var(--bg-body); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 20px; border: 1px solid var(--border-color); }
+        .flight-row { display: flex; align-items: center; justify-content: space-between; position: relative; }
+        .flight-row:first-child { border-bottom: 1px dashed var(--border-color); padding-bottom: 15px; margin-bottom: 15px; }
+        .flight-point { text-align: center; flex: 1; }
+        .flight-time-lg { font-size: 1.4rem; font-weight: 800; display: block; color: var(--text-main); }
+        .flight-label { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; font-weight: 600; }
+        .flight-divider { display: flex; flex-direction: column; align-items: center; color: var(--accent); flex: 1; font-size: 0.8rem; font-weight: 700; gap: 4px; }
+        .flight-divider::before { content: ''; width: 100%; height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); display: block; margin-bottom: 2px; }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .stat-card { background: var(--bg-body); border-radius: var(--radius-lg); padding: 20px; border: 1px solid var(--border-color); display: flex; flex-direction: column; }
+        .stat-title { font-size: 0.85rem; font-weight: 700; color: var(--text-muted); text-transform: uppercase; margin-bottom: 15px; letter-spacing: 0.5px; }
+        
+        .price-breakdown { flex: 1; }
+        .breakdown-item { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 0.9rem; font-weight: 600; }
+        .breakdown-color { width: 12px; height: 12px; border-radius: 4px; display: inline-block; margin-right: 8px; vertical-align: middle;}
+        
+        .total-box { margin-top: auto; background: var(--accent); color: white; border-radius: var(--radius-md); padding: 15px; text-align: center; }
+        .total-val { font-size: 1.8rem; font-weight: 800; }
+        .total-sub { font-size: 0.85rem; opacity: 0.9; font-weight: 500; }
+
+        .modal-actions { display: flex; gap: 12px; padding: 20px 30px; background: var(--bg-sidebar); border-top: 1px solid var(--border-color); }
+        .btn-modal { flex: 1; padding: 14px; border-radius: var(--radius-md); font-weight: 700; cursor: pointer; border: none; transition: 0.2s; display: flex; justify-content: center; align-items: center; gap: 8px; }
+        .btn-primary { background: var(--text-main); color: var(--bg-body); }
+        .btn-primary:hover { opacity: 0.9; transform: translateY(-2px); }
+        .btn-secondary { background: var(--btn-bg); color: var(--text-main); border: 1px solid var(--border-color); }
+        .btn-secondary:hover { background: var(--border-color); }
+
+        #toast-container { position: fixed; bottom: 24px; right: 24px; display: flex; flex-direction: column; gap: 10px; z-index: 10000; }
+        .toast { background: var(--text-main); color: var(--bg-body); padding: 14px 24px; border-radius: var(--radius-md); box-shadow: var(--shadow-lg); font-size: 0.95rem; font-weight: 600; opacity: 0; transform: translateY(20px); transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 10px; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.error { background: var(--danger); color: white; }
+
+        .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .compare-col { background: var(--bg-body); padding: 20px; border-radius: var(--radius-lg); border: 1px solid var(--border-color); }
+        
+        .btn-compare { background: var(--bg-body); color: var(--text-main); border: 1px solid var(--border-color); padding: 10px 20px; border-radius: var(--radius-md); font-weight: 700; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 8px;}
+        .btn-compare:hover { border-color: var(--text-muted); }
+        .btn-compare.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+        @media (max-width: 900px) {
+            body { flex-direction: column; overflow: auto; }
+            .sidebar { width: 100%; min-width: 100%; height: auto; border-right: none; border-bottom: 1px solid var(--border-color); transform: none !important; margin: 0 !important; }
+            .btn-toggle-sidebar { display: none; }
+            .main-content { padding: 20px; }
+            .stats-grid { grid-template-columns: 1fr; }
+            .compare-grid { grid-template-columns: 1fr; }
+            .modal-actions { flex-wrap: wrap; }
+            .btn-modal { flex: 100%; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="toast-container"></div>
+
+    <div class="modal-overlay" id="tripModal" onclick="closeModal(event)">
+        <div class="export-wrapper" id="exportArea">
+            <div class="modal-content" onclick="event.stopPropagation()">
+                <button class="close-btn" aria-label="Fermer" onclick="closeModal(event)">✕</button>
+                <div id="modalContentInner" style="display:flex; flex-direction:column; height: 100%;"></div>
+            </div>
+        </div>
+    </div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="header">
+            <div class="brand-row">
+                <div class="logo-container">
+                    <img src="favicon.png" class="favicon-img" onerror="this.style.display='none'">
+                    <div class="logo">Voyages<span>.io</span></div>
+                </div>
+                <button aria-label="Changer le thème" onclick="toggleTheme()" style="background:var(--btn-bg); border:1px solid var(--border-color); border-radius:50%; width:36px; height:36px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;">🌓</button>
+            </div>
+            <div class="action-buttons">
+                <input type="file" id="fileInput" accept=".json" style="display: none;">
+                <button class="btn-action" onclick="document.getElementById('fileInput').click()">📁 Importer</button>
+                <button class="btn-action" onclick="exportData()">💾 Exporter</button>
+                <button class="btn-action btn-danger" onclick="clearAllData()">🗑️ Vider</button>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <form id="tripForm">
+                <input type="hidden" id="editId">
+                <div class="form-grid">
+                    <div class="section-title">📍 Trajet & Vols</div>
+                    <div class="input-group">
+                        <label>Départ</label>
+                        <input type="text" id="depA" placeholder="Ex: Paris" autocomplete="off" data-lat="" data-lon="">
+                        <div class="autocomplete-list" id="depList"></div>
+                    </div>
+                    <div class="input-group">
+                        <label>Arrivée</label>
+                        <input type="text" id="arrA" placeholder="Ex: Porto" autocomplete="off" data-lat="" data-lon="">
+                        <div class="autocomplete-list" id="arrList"></div>
+                    </div>
+
+                    <div class="input-group full-width">
+                        <label>Vol Aller</label>
+                        <div class="time-row">
+                            <input type="date" id="dateAller" required>
+                            <input type="time" id="timeAllerDep" title="Décollage">
+                            <input type="time" id="timeAllerArr" title="Atterrissage">
+                        </div>
+                    </div>
+
+                    <div class="input-group full-width">
+                        <label>Vol Retour</label>
+                        <div class="time-row">
+                            <input type="date" id="dateRetour" required>
+                            <input type="time" id="timeRetDep" title="Décollage">
+                            <input type="time" id="timeRetArr" title="Atterrissage">
+                        </div>
+                    </div>
+
+                    <div class="section-title">👥 Voyageurs & Logement</div>
+                    <div class="time-row full-width">
+                        <div class="input-group" style="flex:1;">
+                            <label>Personnes</label>
+                            <input type="number" id="numPeople" value="1" min="1">
+                        </div>
+                        <div class="input-group" style="flex:1;">
+                            <label>Chambres</label>
+                            <input type="number" id="numRooms" value="1" min="1">
+                        </div>
+                    </div>
+
+                    <div class="section-title">💶 Budget (Total)</div>
+                    <div class="input-group"><label>✈️ Vol</label><input type="number" id="pFlight" step="0.01" value="0" min="0"></div>
+                    <div class="input-group"><label>🏨 Hôtel</label><input type="number" id="pHotel" step="0.01" value="0" min="0"></div>
+                    <div class="input-group"><label>🚗 Voiture</label><input type="number" id="pCar" step="0.01" value="0" min="0"></div>
+                    <div class="input-group"><label>🅿️ Parking</label><input type="number" id="pParking" step="0.01" value="0" min="0"></div>
+
+                    <div class="section-title">🗺️ Informations Extras</div>
+                    <div class="input-group full-width">
+                        <label>Lien MyMaps / Google Maps</label>
+                        <input type="url" id="myMapUrl" placeholder="https://...">
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Lien Vidéo YouTube (Shorts)</label>
+                        <input type="url" id="ytUrl" placeholder="https://youtube.com/shorts/...">
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Lien de l'image de fond</label>
+                        <input type="url" id="imgUrl" placeholder="https://images.unsplash.com/...">
+                    </div>
+                    <div class="input-group full-width">
+                        <label>Arguments & Remarques</label>
+                        <textarea id="tripNotes" rows="2" placeholder="Ex: Logement avec vue mer, piscine incluse..."></textarea>
+                    </div>
+                </div>
+                <button type="submit" class="btn-submit" id="submitBtn">Enregistrer la proposition</button>
+            </form>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <div class="top-bar">
+            <h1 class="page-title">Mes Propositions</h1>
+            <div class="top-actions">
+                <button id="compareBtn" class="btn-compare" onclick="toggleCompareMode()">⚖️ Comparer (0/2)</button>
+                <select id="sortSelect" onchange="renderTrips()" style="padding: 10px 16px; border-radius: var(--radius-md); background: var(--btn-bg); border: 1px solid var(--border-color); color: var(--text-main); font-weight: 600; cursor: pointer; outline: none;">
+                    <option value="date">🕒 Récent</option>
+                    <option value="priceAsc">💶 Prix croissant</option>
+                    <option value="priceDesc">💶 Prix décroissant</option>
+                </select>
+                <button class="btn-toggle-sidebar" onclick="toggleSidebar()" id="toggleSidebarBtn">
+                    📺 Mode Pitch
+                </button>
+            </div>
+        </div>
+        <div class="results-grid" id="tripsGrid"></div>
+    </main>
+
+    <script>
+        let trips = JSON.parse(localStorage.getItem('myTrips')) || [];
+        const grid = document.getElementById('tripsGrid');
+        let detailChartInstance = null; 
+        
+        let isComparing = false;
+        let compareSelection = [];
+
+        function showToast(message, isError = false) {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${isError ? 'error' : ''}`;
+            toast.innerHTML = isError ? `⚠️ ${message}` : `✅ ${message}`;
+            container.appendChild(toast);
+            toast.offsetHeight; 
+            toast.classList.add('show');
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        }
+        if(localStorage.getItem('theme') === 'dark') document.body.classList.add('dark-mode');
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const btn = document.getElementById('toggleSidebarBtn');
+            sidebar.classList.toggle('collapsed');
+            if (sidebar.classList.contains('collapsed')) {
+                btn.innerHTML = '✏️ Editer';
+            } else {
+                btn.innerHTML = '📺 Mode Pitch';
+            }
+        }
+
+        function escapeHTML(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function formatDateFR(dateString) {
+            if(!dateString) return '';
+            const parts = dateString.split('-');
+            if(parts.length !== 3) return dateString;
+            return `${parts[2]}/${parts[1]}/${parts[0]}`;
+        }
+
+        let debounceTimer;
+        let currentFocus = -1;
+
+        async function fetchCities(query, listElement, inputElement) {
+            if (query.length < 2) { listElement.style.display = 'none'; return; }
+            clearTimeout(debounceTimer);
+            
+            debounceTimer = setTimeout(async () => {
+                try {
+                    const res = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${query}&count=5&language=fr&format=json`);
+                    if(!res.ok) throw new Error("API Limit");
+                    const data = await res.json();
+                    
+                    listElement.innerHTML = '';
+                    currentFocus = -1;
+                    if (data.results) {
+                        data.results.forEach((city) => {
+                            const div = document.createElement('div');
+                            div.className = 'autocomplete-item';
+                            div.textContent = `${city.name} (${city.country})`;
+                            div.onclick = () => {
+                                inputElement.value = city.name;
+                                inputElement.dataset.lat = city.latitude;
+                                inputElement.dataset.lon = city.longitude;
+                                listElement.style.display = 'none';
+                            };
+                            listElement.appendChild(div);
+                        });
+                        listElement.style.display = 'block';
+                    } else {
+                        listElement.style.display = 'none';
+                    }
+                } catch(e) {}
+            }, 300);
+        }
+
+        function handleKeydown(e, listElement, inputElement) {
+            let items = listElement.getElementsByClassName('autocomplete-item');
+            if (e.key === "ArrowDown") {
+                currentFocus++; addActive(items);
+            } else if (e.key === "ArrowUp") {
+                currentFocus--; addActive(items);
+            } else if (e.key === "Enter") {
+                e.preventDefault();
+                if (currentFocus > -1 && items[currentFocus]) items[currentFocus].click();
+            }
+        }
+
+        function addActive(items) {
+            if (!items || items.length === 0) return;
+            Array.from(items).forEach(i => i.classList.remove('active'));
+            if (currentFocus >= items.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = items.length - 1;
+            items[currentFocus].classList.add('active');
+        }
+
+        const depInput = document.getElementById('depA');
+        const arrInput = document.getElementById('arrA');
+        const depList = document.getElementById('depList');
+        const arrList = document.getElementById('arrList');
+
+        depInput.addEventListener('input', function() { fetchCities(this.value, depList, this); });
+        arrInput.addEventListener('input', function() { fetchCities(this.value, arrList, this); });
+        depInput.addEventListener('keydown', function(e) { handleKeydown(e, depList, this); });
+        arrInput.addEventListener('keydown', function(e) { handleKeydown(e, arrList, this); });
+
+        document.addEventListener('click', (e) => { 
+            if(!e.target.closest('.input-group')) { depList.style.display='none'; arrList.style.display='none'; }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === "Escape") closeModal();
+        });
+
+        function toggleCompareMode() {
+            isComparing = !isComparing;
+            compareSelection = [];
+            const btn = document.getElementById('compareBtn');
+            if (isComparing) {
+                btn.classList.add('active');
+                btn.textContent = 'Annuler Comparaison';
+                showToast("Sélectionnez 2 cartes à comparer", false);
+            } else {
+                btn.classList.remove('active');
+                btn.textContent = '⚖️ Comparer (0/2)';
+            }
+            renderTrips();
+        }
+
+        function handleCompareSelect(id) {
+            const index = compareSelection.indexOf(id);
+            if (index > -1) {
+                compareSelection.splice(index, 1);
+            } else {
+                if (compareSelection.length < 2) compareSelection.push(id);
+            }
+            
+            document.getElementById('compareBtn').textContent = `Annuler (${compareSelection.length}/2)`;
+            renderTrips();
+
+            if (compareSelection.length === 2) {
+                openCompareModal();
+            }
+        }
+
+        function openCompareModal() {
+            const t1 = trips.find(t => t.id === compareSelection[0]);
+            const t2 = trips.find(t => t.id === compareSelection[1]);
+            
+            const modal = document.getElementById('tripModal');
+            const content = document.getElementById('modalContentInner');
+
+            const renderCol = (t) => {
+                const nPeople = Number(t.numPeople) || 1;
+                const costPerPerson = (t.total / nPeople).toFixed(2);
+                
+                // Dynamique pour le modal de comparaison aussi (n'affiche que si > 0)
+                let priceDetailsHtml = '';
+                if(Number(t.pFlight) > 0) priceDetailsHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>✈️ Vol (A/R)</span> <strong>${t.pFlight} €</strong></div>`;
+                if(Number(t.pHotel) > 0) priceDetailsHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>🏨 Hôtel</span> <strong>${t.pHotel} €</strong></div>`;
+                if(Number(t.pCar) > 0) priceDetailsHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>🚗 Voiture</span> <strong>${t.pCar} €</strong></div>`;
+                if(Number(t.pParking) > 0) priceDetailsHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>🅿️ Parking</span> <strong>${t.pParking} €</strong></div>`;
+
+                return `
+                <div class="compare-col">
+                    <div style="height: 120px; border-radius: var(--radius-md); overflow: hidden; margin-bottom: 15px; position:relative;">
+                        <img src="${t.imgUrl ? escapeHTML(t.imgUrl) : ''}" style="width:100%; height:100%; object-fit:cover;">
+                        <div style="position:absolute; inset:0; background: linear-gradient(to top, rgba(0,0,0,0.8), transparent); display:flex; align-items:flex-end; padding:12px;">
+                            <h3 style="color:white; font-weight:800;">${escapeHTML(t.arrA)}</h3>
+                        </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:flex-end; margin-bottom: 15px;">
+                        <div>
+                            <div style="font-size:1.8rem; font-weight:800; color:var(--accent); line-height:1;">${t.total.toFixed(0)} €</div>
+                            <div style="font-size:0.85rem; color:var(--text-muted); font-weight:600;">Total</div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:1.2rem; font-weight:700;">${costPerPerson} €</div>
+                            <div style="font-size:0.85rem; color:var(--text-muted);">/ personne</div>
+                        </div>
+                    </div>
+                    <div style="background:var(--bg-body); border-radius:8px; padding:12px; font-size:0.85rem; border:1px solid var(--border-color); margin-bottom:15px;">
+                        ${priceDetailsHtml}
+                        <div style="display:flex; justify-content:space-between; margin-top:6px; border-top:1px dashed var(--border-color); padding-top:6px;"><span>👥 Capacité</span> <strong>${nPeople} pers. (${t.numRooms || 1} ch.)</strong></div>
+                    </div>
+                    <p style="font-size:0.85rem; color:var(--text-muted); font-weight:500;">📅 Du ${formatDateFR(t.dateAller)} au ${formatDateFR(t.dateRetour)}</p>
+                    ${t.notes ? `<div style="margin-top:15px; padding:10px; background:var(--accent-light); color:var(--accent); border-radius:8px; font-size:0.85rem; font-weight:600;">💬 ${escapeHTML(t.notes)}</div>` : ''}
+                </div>
+                `;
+            };
+
+            content.innerHTML = `
+                <div class="modal-scroll">
+                    <div class="modal-header">
+                        <h2 class="modal-route">Face à Face</h2>
+                    </div>
+                    <div class="compare-grid">
+                        ${renderCol(t1)}
+                        ${renderCol(t2)}
+                    </div>
+                </div>
+                <div class="modal-actions">
+                    <button class="btn-modal btn-secondary" onclick="closeModal(event)">Fermer</button>
+                </div>
+            `;
+            
+            modal.classList.add('active');
+            
+            isComparing = false;
+            compareSelection = [];
+            document.getElementById('compareBtn').classList.remove('active');
+            document.getElementById('compareBtn').textContent = '⚖️ Comparer (0/2)';
+            renderTrips(); 
+        }
+
+        function openModal(id) {
+            const trip = trips.find(t => t.id === id);
+            if(!trip) return;
+
+            const modal = document.getElementById('tripModal');
+            const content = document.getElementById('modalContentInner');
+
+            const total = Number(trip.total) || 1; 
+            const nPeople = Number(trip.numPeople) || 1;
+            const costPerPerson = (total / nPeople).toFixed(2);
+            
+            const safeDep = escapeHTML(trip.depA);
+            const safeArr = escapeHTML(trip.arrA);
+            const safeNotes = escapeHTML(trip.notes || '').replace(/\n/g, '<br>');
+
+            let mapIframeHtml = '';
+            if (trip.myMapUrl) {
+                let embedUrl = trip.myMapUrl;
+                if (embedUrl.includes('/edit?mid=')) embedUrl = embedUrl.replace('/edit?mid=', '/embed?mid=');
+                if (embedUrl.includes('/viewer?mid=')) embedUrl = embedUrl.replace('/viewer?mid=', '/embed?mid=');
+                mapIframeHtml = `
+                    <div style="margin-top:20px; border-radius:var(--radius-lg); overflow:hidden; border:1px solid var(--border-color);">
+                        <iframe class="export-hide-iframe" src="${escapeHTML(embedUrl)}" width="100%" height="250" style="border:0; display:block;"></iframe>
+                    </div>
+                `;
+            }
+
+            // --- CONSTRUCTION DYNAMIQUE DES DONNÉES DU GRAPHIQUE ET DE LA LÉGENDE ---
+            const pFlight = Number(trip.pFlight) || 0;
+            const pHotel = Number(trip.pHotel) || 0;
+            const pCar = Number(trip.pCar) || 0;
+            const pParking = Number(trip.pParking) || 0;
+
+            let chartLabels = [];
+            let chartData = [];
+            let chartColors = [];
+            let legendHtml = '';
+
+            if (pFlight > 0) {
+                chartLabels.push('Vols'); chartData.push(pFlight); chartColors.push('#4f46e5');
+                legendHtml += `<div class="breakdown-item"><div><span class="breakdown-color" style="background:#4f46e5;"></span> Vols</div><span>${pFlight.toFixed(0)} €</span></div>`;
+            }
+            if (pHotel > 0) {
+                chartLabels.push('Hôtel'); chartData.push(pHotel); chartColors.push('#0ea5e9');
+                legendHtml += `<div class="breakdown-item"><div><span class="breakdown-color" style="background:#0ea5e9;"></span> Hôtel</div><span>${pHotel.toFixed(0)} €</span></div>`;
+            }
+            if (pCar > 0) {
+                chartLabels.push('Voiture'); chartData.push(pCar); chartColors.push('#f59e0b');
+                legendHtml += `<div class="breakdown-item"><div><span class="breakdown-color" style="background:#f59e0b;"></span> Voiture</div><span>${pCar.toFixed(0)} €</span></div>`;
+            }
+            if (pParking > 0) {
+                chartLabels.push('Parking'); chartData.push(pParking); chartColors.push('#8b5cf6');
+                legendHtml += `<div class="breakdown-item"><div><span class="breakdown-color" style="background:#8b5cf6;"></span> Parking</div><span>${pParking.toFixed(0)} €</span></div>`;
+            }
+
+            // Sécurité : si aucun budget n'est renseigné
+            if (chartData.length === 0) {
+                chartLabels.push('Aucun frais renseigné'); chartData.push(1); chartColors.push('#e5e7eb');
+                legendHtml = '<div style="text-align:center; color:var(--text-muted); font-size:0.85rem; padding-top:10px; font-style:italic;">Aucun budget renseigné</div>';
+            }
+
+            content.innerHTML = `
+                <div class="modal-scroll" style="background: var(--bg-sidebar);">
+                    
+                    <div class="modal-header">
+                        <div class="modal-route">${safeDep} <span style="color:var(--text-muted); font-size:1.5rem;">✈️</span> ${safeArr}</div>
+                        <div class="modal-dates">Du ${formatDateFR(trip.dateAller)} au ${formatDateFR(trip.dateRetour)}</div>
+                        ${trip.ytUrl ? `
+                            <a href="${escapeHTML(trip.ytUrl)}" target="_blank" class="yt-btn-modal" title="Voir la vidéo YouTube">
+                                ▶ Voir la vidéo
+                            </a>
+                        ` : ''}
+                    </div>
+
+                    <div class="flight-itinerary">
+                        <div class="flight-row">
+                            <div class="flight-point">
+                                <span class="flight-label">Départ Aller</span>
+                                <span class="flight-time-lg">${escapeHTML(trip.timeAllerDep) || '--:--'}</span>
+                            </div>
+                            <div class="flight-divider">VOL ALLER</div>
+                            <div class="flight-point">
+                                <span class="flight-label">Arrivée</span>
+                                <span class="flight-time-lg">${escapeHTML(trip.timeAllerArr) || '--:--'}</span>
+                            </div>
+                        </div>
+                        <div class="flight-row">
+                            <div class="flight-point">
+                                <span class="flight-label">Départ Retour</span>
+                                <span class="flight-time-lg">${escapeHTML(trip.timeRetDep) || '--:--'}</span>
+                            </div>
+                            <div class="flight-divider" style="color:var(--text-muted);">VOL RETOUR</div>
+                            <div class="flight-point">
+                                <span class="flight-label">Arrivée</span>
+                                <span class="flight-time-lg">${escapeHTML(trip.timeRetArr) || '--:--'}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-title">Répartition du Budget</div>
+                            <div style="height:160px; position:relative; margin-bottom:15px;"><canvas id="modalChart"></canvas></div>
+                            <div class="price-breakdown">
+                                ${legendHtml}
+                            </div>
+                        </div>
+                        
+                        <div class="stat-card">
+                            <div class="stat-title">Résumé du Séjour</div>
+                            <div class="price-breakdown">
+                                <div class="breakdown-item"><span>👥 Voyageurs</span><span>${nPeople} pers.</span></div>
+                                <div class="breakdown-item"><span>🛏️ Hébergement</span><span>${trip.numRooms || 1} chambre(s)</span></div>
+                            </div>
+                            
+                            ${safeNotes ? `
+                            <div class="stat-title" style="margin-top:15px;">Arguments / Notes</div>
+                            <p style="font-size:0.9rem; color:var(--text-main); font-weight:500; background:var(--input-bg); padding:12px; border-radius:8px; border:1px solid var(--border-color);">${safeNotes}</p>
+                            ` : ''}
+
+                            <div class="total-box">
+                                <div class="total-val">${trip.total.toFixed(0)} € <span style="font-size:1rem;">Total</span></div>
+                                <div class="total-sub">Soit ${costPerPerson} € / personne</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    ${mapIframeHtml}
+                </div>
+
+                <div class="modal-actions">
+                    <button class="btn-modal btn-primary" onclick="downloadImage('${trip.id}')">📸 Exporter</button>
+                    <button class="btn-modal btn-secondary" onclick="editTrip('${trip.id}')">✏️ Modifier</button>
+                    <button class="btn-modal" style="background:rgba(239,68,68,0.1); color:var(--danger); border:1px solid rgba(239,68,68,0.2);" onclick="deleteTrip('${trip.id}')">🗑️ Supprimer</button>
+                </div>
+            `;
+
+            modal.classList.add('active');
+
+            if (detailChartInstance) { detailChartInstance.destroy(); }
+            const ctx = document.getElementById('modalChart');
+            detailChartInstance = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: chartLabels,
+                    datasets: [{
+                        data: chartData,
+                        backgroundColor: chartColors,
+                        borderWidth: 0, hoverOffset: 5
+                    }]
+                },
+                options: { 
+                    maintainAspectRatio: false, cutout: '75%',
+                    plugins: { 
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if(chartData[0] === 1 && chartLabels[0] === 'Aucun frais renseigné') return ' Vide';
+                                    let value = context.parsed;
+                                    let chartTotal = context.chart._metasets[context.datasetIndex].total;
+                                    let percentage = chartTotal > 0 ? ((value / chartTotal) * 100).toFixed(0) : 0;
+                                    return ` ${value} € (${percentage}%)`;
+                                }
+                            }
+                        }
+                    } 
+                }
+            });
+        }
+
+        /* EXPORT IMAGE (avec fond respectant les bords arrondis du wrapper) */
+        function downloadImage(tripId) {
+            const trip = trips.find(t => t.id === tripId);
+            const targetElement = document.getElementById('exportArea');
+            
+            const iframe = targetElement.querySelector('.export-hide-iframe');
+            let placeholder = null;
+
+            if (iframe) {
+                placeholder = document.createElement('div');
+                placeholder.style.height = "250px";
+                placeholder.style.background = 'var(--bg-body)';
+                placeholder.style.display = 'flex';
+                placeholder.style.alignItems = 'center';
+                placeholder.style.justifyContent = 'center';
+                placeholder.style.borderTop = '1px solid var(--border-color)';
+                
+                if (trip.myMapUrl) {
+                    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(trip.myMapUrl)}`;
+                    placeholder.innerHTML = `<img src="${qrUrl}" alt="QR Code" style="width:150px; height:150px; border-radius:12px;">`;
+                }
+                
+                iframe.parentNode.replaceChild(placeholder, iframe);
+            }
+
+            const btn = event.target;
+            const originalText = btn.innerHTML;
+            btn.innerHTML = "⏳ Génération..."; 
+            btn.style.opacity = "0.7";
+
+            html2canvas(targetElement, {
+                backgroundColor: null, // Transparent pour garder les bords arrondis du .export-wrapper
+                useCORS: true, 
+                scale: 2
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `Pitch_${trip.depA}_${trip.arrA}.png`;
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                
+                btn.innerHTML = originalText; 
+                btn.style.opacity = "1";
+                showToast("Billet généré avec succès !");
+
+                if (placeholder) {
+                    placeholder.parentNode.replaceChild(iframe, placeholder);
+                }
+            });
+        }
+
+        function closeModal(e) {
+            if(e) e.stopPropagation();
+            document.getElementById('tripModal').classList.remove('active');
+            if (detailChartInstance) detailChartInstance.destroy(); 
+        }
+
+        function renderTrips() {
+            grid.innerHTML = '';
+            const sortMode = document.getElementById('sortSelect').value;
+            
+            trips.forEach(t => { t.total = Number(t.pFlight) + Number(t.pHotel) + Number(t.pCar) + Number(t.pParking); });
+
+            let displayTrips = [...trips];
+            if(sortMode === 'priceAsc') displayTrips.sort((a, b) => a.total - b.total);
+            if(sortMode === 'priceDesc') displayTrips.sort((a, b) => b.total - a.total);
+
+            const destPrices = {};
+            const destCounts = {};
+            trips.forEach(t => {
+                const dest = t.arrA.trim().toLowerCase();
+                if(!destPrices[dest] || t.total < destPrices[dest]) destPrices[dest] = t.total;
+                destCounts[dest] = (destCounts[dest] || 0) + 1;
+            });
+
+            displayTrips.forEach(t => {
+                const dest = t.arrA.trim().toLowerCase();
+                const isBestPrice = (destPrices[dest] === t.total) && (destCounts[dest] > 1);
+                
+                const safeArr = escapeHTML(t.arrA);
+                const imageSource = t.imgUrl ? escapeHTML(t.imgUrl) : "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1 1'%3E%3Crect width='1' height='1' fill='%23e2e8f0'/%3E%3C/svg%3E";
+                const isSelected = compareSelection.includes(t.id);
+                
+                const nPeople = Number(t.numPeople) || 1;
+                const costPerPerson = (t.total / nPeople).toFixed(0);
+
+                const card = document.createElement('div');
+                card.className = `trip-card ${isSelected ? 'compare-selected' : ''}`;
+                card.tabIndex = 0;
+                card.dataset.id = t.id; 
+                
+                card.onclick = (e) => { 
+                    if(!e.target.classList.contains('drag-handle')) {
+                        if (isComparing) handleCompareSelect(t.id); else openModal(t.id); 
+                    }
+                };
+                card.onkeydown = (e) => { 
+                    if(e.key === "Enter") {
+                        if(isComparing) handleCompareSelect(t.id); else openModal(t.id); 
+                    }
+                };
+
+                card.innerHTML = `
+                    ${isBestPrice ? '<div class="badge-best">🏆 Meilleur Prix</div>' : ''}
+                    <div class="drag-handle" title="Déplacer">☰</div>
+                    <div class="card-header">
+                        <img class="card-img" src="${imageSource}" alt="${safeArr}">
+                        <div class="card-gradient"></div>
+                        <div class="card-title-overlay">
+                            <div class="card-route">${safeArr}</div>
+                            <div class="card-dates">Au départ de ${escapeHTML(t.depA)}</div>
+                        </div>
+                        ${t.ytUrl ? `
+                            <a href="${escapeHTML(t.ytUrl)}" target="_blank" class="yt-badge-card" onclick="event.stopPropagation()" title="Voir la vidéo YouTube">
+                                ▶ Vidéo
+                            </a>
+                        ` : ''}
+                    </div>
+                    <div class="card-body">
+                        <div class="card-price-row">
+                            <div>
+                                <div class="price-total">${t.total.toFixed(0)} €</div>
+                                <div style="font-size:0.75rem; color:var(--text-muted); font-weight:600; text-transform:uppercase;">Budget Total</div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div class="price-pp">${costPerPerson} € / pers.</div>
+                            </div>
+                        </div>
+                        <div class="card-details">
+                            <div class="detail-item"><div class="detail-icon">📅</div> <span>${formatDateFR(t.dateAller)} au ${formatDateFR(t.dateRetour)}</span></div>
+                            <div class="detail-item"><div class="detail-icon">👥</div> <span>${nPeople} pers. / ${t.numRooms || 1} ch.</span></div>
+                            <div class="detail-item"><div class="detail-icon">✈️</div> <span>${t.pFlight > 0 ? t.pFlight + '€ A/R' : 'Non inclus'}</span></div>
+                            <div class="detail-item"><div class="detail-icon">🏨</div> <span>${t.pHotel > 0 ? t.pHotel + '€ Log.' : 'Non inclus'}</span></div>
+                        </div>
+                        ${t.notes ? `<div class="card-note">💡 ${escapeHTML(t.notes)}</div>` : ''}
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+            localStorage.setItem('myTrips', JSON.stringify(trips));
+        }
+
+        document.getElementById('tripForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const tripData = {
+                id: document.getElementById('editId').value || crypto.randomUUID(),
+                depA: document.getElementById('depA').value,
+                arrA: document.getElementById('arrA').value,
+                latA: document.getElementById('depA').dataset.lat,
+                lonA: document.getElementById('depA').dataset.lon,
+                latB: document.getElementById('arrA').dataset.lat,
+                lonB: document.getElementById('arrA').dataset.lon,
+                dateAller: document.getElementById('dateAller').value,
+                dateRetour: document.getElementById('dateRetour').value,
+                timeAllerDep: document.getElementById('timeAllerDep').value,
+                timeAllerArr: document.getElementById('timeAllerArr').value,
+                timeRetDep: document.getElementById('timeRetDep').value,
+                timeRetArr: document.getElementById('timeRetArr').value,
+                numPeople: Number(document.getElementById('numPeople').value) || 1,
+                numRooms: Number(document.getElementById('numRooms').value) || 1,
+                pFlight: Number(document.getElementById('pFlight').value) || 0,
+                pHotel: Number(document.getElementById('pHotel').value) || 0,
+                pCar: Number(document.getElementById('pCar').value) || 0,
+                pParking: Number(document.getElementById('pParking').value) || 0,
+                myMapUrl: document.getElementById('myMapUrl').value,
+                ytUrl: document.getElementById('ytUrl').value,
+                imgUrl: document.getElementById('imgUrl').value, 
+                notes: document.getElementById('tripNotes').value
+            };
+            
+            tripData.total = tripData.pFlight + tripData.pHotel + tripData.pCar + tripData.pParking;
+
+            const idx = trips.findIndex(t => t.id === tripData.id);
+            if(idx >= 0) {
+                trips[idx] = tripData;
+                showToast("Modifications enregistrées !");
+            } else {
+                trips.push(tripData);
+                showToast("Nouvelle proposition ajoutée !");
+            }
+            
+            document.getElementById('tripForm').reset();
+            document.getElementById('editId').value = '';
+            document.getElementById('submitBtn').textContent = 'Enregistrer la proposition';
+            renderTrips();
+        });
+
+        function editTrip(id) {
+            const t = trips.find(trip => trip.id === id);
+            document.getElementById('editId').value = t.id;
+            document.getElementById('depA').value = t.depA;
+            document.getElementById('depA').dataset.lat = t.latA;
+            document.getElementById('arrA').value = t.arrA;
+            document.getElementById('arrA').dataset.lat = t.latB;
+            document.getElementById('dateAller').value = t.dateAller;
+            document.getElementById('dateRetour').value = t.dateRetour;
+            document.getElementById('timeAllerDep').value = t.timeAllerDep;
+            document.getElementById('timeAllerArr').value = t.timeAllerArr;
+            document.getElementById('timeRetDep').value = t.timeRetDep;
+            document.getElementById('timeRetArr').value = t.timeRetArr;
+            document.getElementById('numPeople').value = t.numPeople || 1;
+            document.getElementById('numRooms').value = t.numRooms || 1;
+            document.getElementById('pFlight').value = t.pFlight;
+            document.getElementById('pHotel').value = t.pHotel;
+            document.getElementById('pCar').value = t.pCar;
+            document.getElementById('pParking').value = t.pParking;
+            document.getElementById('myMapUrl').value = t.myMapUrl || '';
+            document.getElementById('ytUrl').value = t.ytUrl || '';
+            document.getElementById('imgUrl').value = t.imgUrl || ''; 
+            document.getElementById('tripNotes').value = t.notes || '';
+            
+            document.getElementById('submitBtn').textContent = 'Mettre à jour';
+            closeModal();
+            
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.remove('collapsed');
+            document.getElementById('toggleSidebarBtn').innerHTML = '📺 Mode Pitch';
+            
+            sidebar.scrollTo({ top: 0, behavior: 'smooth' });
+            if (window.innerWidth <= 900) window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function deleteTrip(id) {
+            if(window.confirm("Supprimer cette proposition ?")) {
+                trips = trips.filter(t => t.id !== id);
+                renderTrips();
+                closeModal();
+                showToast("Proposition supprimée.", true);
+            }
+        }
+
+        function clearAllData() { 
+            if(confirm("Attention : Vider toutes les propositions ?")) { 
+                trips = []; renderTrips(); showToast("Liste vidée."); 
+            } 
+        }
+        
+        function exportData() {
+            if(trips.length === 0) return showToast("Rien à exporter !", true);
+            const blob = new Blob([JSON.stringify(trips)], {type: "application/json"});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a'); a.href = url; a.download = "propositions_voyage.json"; a.click();
+        }
+
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function(event) {
+                try {
+                    const importedData = JSON.parse(event.target.result);
+                    if (Array.isArray(importedData)) {
+                        trips = importedData;
+                        localStorage.setItem('myTrips', JSON.stringify(trips));
+                        renderTrips();
+                        showToast('Import réussi !');
+                    }
+                } catch(err) { showToast("Erreur fichier JSON", true); }
+            };
+            reader.readAsText(file);
+            this.value = '';
+        });
+
+        let saveTimeout;
+        new Sortable(grid, { 
+            animation: 250, 
+            ghostClass: 'sortable-ghost',
+            handle: '.drag-handle', 
+            onEnd: () => {
+                const newOrderIds = Array.from(grid.children).map(card => card.dataset.id);
+                trips = newOrderIds.map(id => trips.find(t => t.id === id)).filter(Boolean);
+                
+                clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => {
+                    localStorage.setItem('myTrips', JSON.stringify(trips));
+                }, 500);
+            }
+        });
+
+        renderTrips();
+    </script>
+</body>
+</html>
