@@ -274,12 +274,25 @@
                             <input type="number" id="numRooms" value="1" min="1">
                         </div>
                     </div>
+                    <div class="input-group full-width">
+                        <label>Nom de l'Hôtel</label>
+                        <input type="text" id="hotelName" placeholder="Ex: Ibis Styles Centre, Airbnb...">
+                    </div>
 
                     <div class="section-title">💶 Budget (Total)</div>
                     <div class="input-group"><label>✈️ Vol</label><input type="number" id="pFlight" step="0.01" value="0" min="0"></div>
                     <div class="input-group"><label>🏨 Hôtel</label><input type="number" id="pHotel" step="0.01" value="0" min="0"></div>
                     <div class="input-group"><label>🚗 Voiture</label><input type="number" id="pCar" step="0.01" value="0" min="0"></div>
                     <div class="input-group"><label>🅿️ Parking</label><input type="number" id="pParking" step="0.01" value="0" min="0"></div>
+                    
+                    <div class="input-group">
+                        <label>🚖 Transfert (A/R)</label>
+                        <input type="number" id="pTransfer" step="0.01" value="0" min="0">
+                    </div>
+                    <div class="input-group">
+                        <label>Moyen de Transfert</label>
+                        <input type="text" id="transferMethod" placeholder="Ex: Uber, Métro, Bus...">
+                    </div>
 
                     <div class="section-title">🗺️ Informations Extras</div>
                     <div class="input-group full-width">
@@ -491,10 +504,10 @@
                 const nPeople = Number(t.numPeople) || 1;
                 const costPerPerson = (t.total / nPeople).toFixed(2);
                 
-                // Dynamique pour le modal de comparaison aussi (n'affiche que si > 0)
                 let priceDetailsHtml = '';
                 if(Number(t.pFlight) > 0) priceDetailsHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>✈️ Vol (A/R)</span> <strong>${t.pFlight} €</strong></div>`;
                 if(Number(t.pHotel) > 0) priceDetailsHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>🏨 Hôtel</span> <strong>${t.pHotel} €</strong></div>`;
+                if(Number(t.pTransfer) > 0) priceDetailsHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>🚖 Transfert</span> <strong>${t.pTransfer} €</strong></div>`;
                 if(Number(t.pCar) > 0) priceDetailsHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>🚗 Voiture</span> <strong>${t.pCar} €</strong></div>`;
                 if(Number(t.pParking) > 0) priceDetailsHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:6px;"><span>🅿️ Parking</span> <strong>${t.pParking} €</strong></div>`;
 
@@ -520,7 +533,9 @@
                         ${priceDetailsHtml}
                         <div style="display:flex; justify-content:space-between; margin-top:6px; border-top:1px dashed var(--border-color); padding-top:6px;"><span>👥 Capacité</span> <strong>${nPeople} pers. (${t.numRooms || 1} ch.)</strong></div>
                     </div>
-                    <p style="font-size:0.85rem; color:var(--text-muted); font-weight:500;">📅 Du ${formatDateFR(t.dateAller)} au ${formatDateFR(t.dateRetour)}</p>
+                    ${t.hotelName ? `<div style="font-size:0.85rem; color:var(--text-main); font-weight:600; margin-top:10px;">🏨 ${escapeHTML(t.hotelName)}</div>` : ''}
+                    ${t.transferMethod ? `<div style="font-size:0.85rem; color:var(--text-muted); margin-top:4px;">🚖 ${escapeHTML(t.transferMethod)}</div>` : ''}
+                    <p style="font-size:0.85rem; color:var(--text-muted); font-weight:500; margin-top:10px;">📅 Du ${formatDateFR(t.dateAller)} au ${formatDateFR(t.dateRetour)}</p>
                     ${t.notes ? `<div style="margin-top:15px; padding:10px; background:var(--accent-light); color:var(--accent); border-radius:8px; font-size:0.85rem; font-weight:600;">💬 ${escapeHTML(t.notes)}</div>` : ''}
                 </div>
                 `;
@@ -577,9 +592,9 @@
                 `;
             }
 
-            // --- CONSTRUCTION DYNAMIQUE DES DONNÉES DU GRAPHIQUE ET DE LA LÉGENDE ---
             const pFlight = Number(trip.pFlight) || 0;
             const pHotel = Number(trip.pHotel) || 0;
+            const pTransfer = Number(trip.pTransfer) || 0;
             const pCar = Number(trip.pCar) || 0;
             const pParking = Number(trip.pParking) || 0;
 
@@ -596,6 +611,10 @@
                 chartLabels.push('Hôtel'); chartData.push(pHotel); chartColors.push('#0ea5e9');
                 legendHtml += `<div class="breakdown-item"><div><span class="breakdown-color" style="background:#0ea5e9;"></span> Hôtel</div><span>${pHotel.toFixed(0)} €</span></div>`;
             }
+            if (pTransfer > 0) {
+                chartLabels.push('Transfert'); chartData.push(pTransfer); chartColors.push('#10b981');
+                legendHtml += `<div class="breakdown-item"><div><span class="breakdown-color" style="background:#10b981;"></span> Transfert</div><span>${pTransfer.toFixed(0)} €</span></div>`;
+            }
             if (pCar > 0) {
                 chartLabels.push('Voiture'); chartData.push(pCar); chartColors.push('#f59e0b');
                 legendHtml += `<div class="breakdown-item"><div><span class="breakdown-color" style="background:#f59e0b;"></span> Voiture</div><span>${pCar.toFixed(0)} €</span></div>`;
@@ -605,7 +624,6 @@
                 legendHtml += `<div class="breakdown-item"><div><span class="breakdown-color" style="background:#8b5cf6;"></span> Parking</div><span>${pParking.toFixed(0)} €</span></div>`;
             }
 
-            // Sécurité : si aucun budget n'est renseigné
             if (chartData.length === 0) {
                 chartLabels.push('Aucun frais renseigné'); chartData.push(1); chartColors.push('#e5e7eb');
                 legendHtml = '<div style="text-align:center; color:var(--text-muted); font-size:0.85rem; padding-top:10px; font-style:italic;">Aucun budget renseigné</div>';
@@ -663,6 +681,8 @@
                             <div class="price-breakdown">
                                 <div class="breakdown-item"><span>👥 Voyageurs</span><span>${nPeople} pers.</span></div>
                                 <div class="breakdown-item"><span>🛏️ Hébergement</span><span>${trip.numRooms || 1} chambre(s)</span></div>
+                                ${trip.hotelName ? `<div class="breakdown-item"><span>🏨 Nom de l'Hôtel</span><span style="text-align:right;">${escapeHTML(trip.hotelName)}</span></div>` : ''}
+                                ${trip.transferMethod ? `<div class="breakdown-item"><span>🚖 Trajet Aéroport↔Hôtel</span><span style="text-align:right;">${escapeHTML(trip.transferMethod)}</span></div>` : ''}
                             </div>
                             
                             ${safeNotes ? `
@@ -721,7 +741,6 @@
             });
         }
 
-        /* EXPORT IMAGE (avec fond respectant les bords arrondis du wrapper) */
         function downloadImage(tripId) {
             const trip = trips.find(t => t.id === tripId);
             const targetElement = document.getElementById('exportArea');
@@ -752,7 +771,7 @@
             btn.style.opacity = "0.7";
 
             html2canvas(targetElement, {
-                backgroundColor: null, // Transparent pour garder les bords arrondis du .export-wrapper
+                backgroundColor: null, 
                 useCORS: true, 
                 scale: 2
             }).then(canvas => {
@@ -781,7 +800,7 @@
             grid.innerHTML = '';
             const sortMode = document.getElementById('sortSelect').value;
             
-            trips.forEach(t => { t.total = Number(t.pFlight) + Number(t.pHotel) + Number(t.pCar) + Number(t.pParking); });
+            trips.forEach(t => { t.total = Number(t.pFlight) + Number(t.pHotel) + Number(t.pCar) + Number(t.pParking) + (Number(t.pTransfer) || 0); });
 
             let displayTrips = [...trips];
             if(sortMode === 'priceAsc') displayTrips.sort((a, b) => a.total - b.total);
@@ -851,8 +870,8 @@
                         <div class="card-details">
                             <div class="detail-item"><div class="detail-icon">📅</div> <span>${formatDateFR(t.dateAller)} au ${formatDateFR(t.dateRetour)}</span></div>
                             <div class="detail-item"><div class="detail-icon">👥</div> <span>${nPeople} pers. / ${t.numRooms || 1} ch.</span></div>
-                            <div class="detail-item"><div class="detail-icon">✈️</div> <span>${t.pFlight > 0 ? t.pFlight + '€ A/R' : 'Non inclus'}</span></div>
                             <div class="detail-item"><div class="detail-icon">🏨</div> <span>${t.pHotel > 0 ? t.pHotel + '€ Log.' : 'Non inclus'}</span></div>
+                            <div class="detail-item"><div class="detail-icon">🚖</div> <span>${t.pTransfer > 0 ? t.pTransfer + '€ Transf.' : 'Non inclus'}</span></div>
                         </div>
                         ${t.notes ? `<div class="card-note">💡 ${escapeHTML(t.notes)}</div>` : ''}
                     </div>
@@ -880,17 +899,20 @@
                 timeRetArr: document.getElementById('timeRetArr').value,
                 numPeople: Number(document.getElementById('numPeople').value) || 1,
                 numRooms: Number(document.getElementById('numRooms').value) || 1,
+                hotelName: document.getElementById('hotelName').value,
                 pFlight: Number(document.getElementById('pFlight').value) || 0,
                 pHotel: Number(document.getElementById('pHotel').value) || 0,
                 pCar: Number(document.getElementById('pCar').value) || 0,
                 pParking: Number(document.getElementById('pParking').value) || 0,
+                pTransfer: Number(document.getElementById('pTransfer').value) || 0,
+                transferMethod: document.getElementById('transferMethod').value,
                 myMapUrl: document.getElementById('myMapUrl').value,
                 ytUrl: document.getElementById('ytUrl').value,
                 imgUrl: document.getElementById('imgUrl').value, 
                 notes: document.getElementById('tripNotes').value
             };
             
-            tripData.total = tripData.pFlight + tripData.pHotel + tripData.pCar + tripData.pParking;
+            tripData.total = tripData.pFlight + tripData.pHotel + tripData.pCar + tripData.pParking + tripData.pTransfer;
 
             const idx = trips.findIndex(t => t.id === tripData.id);
             if(idx >= 0) {
@@ -922,10 +944,13 @@
             document.getElementById('timeRetArr').value = t.timeRetArr;
             document.getElementById('numPeople').value = t.numPeople || 1;
             document.getElementById('numRooms').value = t.numRooms || 1;
+            document.getElementById('hotelName').value = t.hotelName || '';
             document.getElementById('pFlight').value = t.pFlight;
             document.getElementById('pHotel').value = t.pHotel;
             document.getElementById('pCar').value = t.pCar;
             document.getElementById('pParking').value = t.pParking;
+            document.getElementById('pTransfer').value = t.pTransfer || 0;
+            document.getElementById('transferMethod').value = t.transferMethod || '';
             document.getElementById('myMapUrl').value = t.myMapUrl || '';
             document.getElementById('ytUrl').value = t.ytUrl || '';
             document.getElementById('imgUrl').value = t.imgUrl || ''; 
